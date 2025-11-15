@@ -2,6 +2,7 @@ import sys
 import os
 from repo_reader import get_direct_dependencies
 from graph_builder import DependencyGraph, load_test_repo
+from visualizer import generate_dot, render_graph, print_ascii_tree
 
 def load_simple_yaml(path):
     if not os.path.exists(path):
@@ -106,6 +107,17 @@ def main():
     else:
         print(f"\nУ пакета {cfg['package_name']} нет транзитивных зависимостей.")
 
+    install_order = graph.get_install_order(cfg["package_name"])
+    print(f"\nПорядок установки пакетов для {cfg['package_name']}:")
+    for pkg in install_order:
+        print(" -", pkg)
+
+    if cfg.get("ascii_tree", False):
+        print("\nASCII-дерево зависимостей:")
+        print_ascii_tree(dependencies, cfg["package_name"])
+    else:
+        dot_text = generate_dot(dependencies)
+        render_graph(dot_text, output_file="dependencies.png")
 
 
 if __name__ == "__main__":
