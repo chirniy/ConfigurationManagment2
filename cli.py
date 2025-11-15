@@ -1,5 +1,6 @@
 import sys
 import os
+from repo_reader import get_direct_dependencies
 
 
 def load_simple_yaml(path):
@@ -59,7 +60,6 @@ def print_config(cfg):
 def main():
     config_path = "config.yaml"
 
-    # Можно указать другой конфиг
     if len(sys.argv) > 1:
         config_path = sys.argv[1]
 
@@ -76,6 +76,24 @@ def main():
         sys.exit(3)
 
     print_config(cfg)
+
+    if not cfg.get("use_test_repo", False):
+        print("\nПолучение прямых зависимостей...")
+
+        try:
+            deps = get_direct_dependencies(cfg["repository"], cfg["package_name"])
+        except Exception as e:
+            print(f"[ОШИБКА ПОЛУЧЕНИЯ ЗАВИСИМОСТЕЙ] {e}")
+            sys.exit(4)
+
+        if deps:
+            print("Прямые зависимости:")
+            for d in deps:
+                print(f" - {d}")
+        else:
+            print("У пакета нет прямых зависимостей.")
+    else:
+        print("\nТестовый режим на Этапе 2 не используется.")
 
 
 if __name__ == "__main__":
