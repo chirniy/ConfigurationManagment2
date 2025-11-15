@@ -78,20 +78,16 @@ def main():
 
     print_config(cfg)
 
-    # === Этап 3 ===
     print("\nПостроение графа зависимостей...")
 
     if cfg.get("use_test_repo", False):
-        # Режим тестового репозитория
         if "repository" not in cfg or not os.path.exists(cfg["repository"]):
             print("[ОШИБКА] Укажите существующий путь к тестовому файлу")
             sys.exit(4)
         dependencies = load_test_repo(cfg["repository"])
     else:
-        # Режим реального репозитория
         try:
             deps = get_direct_dependencies(cfg["repository"], cfg["package_name"])
-            # Для графа создаём словарь с одним пакетом
             dependencies = {cfg["package_name"]: deps}
         except Exception as e:
             print(f"[ОШИБКА ПОЛУЧЕНИЯ ЗАВИСИМОСТЕЙ] {e}")
@@ -112,6 +108,11 @@ def main():
     else:
         print(f"У пакета {cfg['package_name']} нет транзитивных зависимостей.")
 
+    print("\nПорядок установки пакетов:")
+
+    install_order = graph.get_install_order(cfg["package_name"])
+    for pkg in install_order:
+        print(" -", pkg)
 
 if __name__ == "__main__":
     main()

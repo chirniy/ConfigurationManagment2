@@ -18,6 +18,20 @@ class DependencyGraph:
         result.remove(pkg_name)
         return result
 
+    def get_install_order(self, pkg_name):
+        visited = set()
+        order = []
+
+        def dfs(pkg):
+            if pkg in visited:
+                return
+            visited.add(pkg)
+            for dep in self.graph.get(pkg, []):
+                dfs(dep)
+            order.append(pkg)
+
+        dfs(pkg_name)
+        return order
 
 def load_test_repo(path):
     dependencies = {}
