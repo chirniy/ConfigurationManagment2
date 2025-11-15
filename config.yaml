@@ -1,0 +1,4 @@
+package_name: mypkg
+repository: https://dl-cdn.alpinelinux.org/alpine/v3.18/main
+use_test_repo: false
+ascii_tree: true
