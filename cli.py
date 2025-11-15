@@ -1,6 +1,7 @@
 import sys
 import os
 from repo_reader import get_direct_dependencies
+from graph_builder import DependencyGraph, load_test_repo
 
 
 def load_simple_yaml(path):
@@ -77,23 +78,39 @@ def main():
 
     print_config(cfg)
 
-    if not cfg.get("use_test_repo", False):
-        print("\nПолучение прямых зависимостей...")
+    # === Этап 3 ===
+    print("\nПостроение графа зависимостей...")
 
+    if cfg.get("use_test_repo", False):
+        # Режим тестового репозитория
+        if "repository" not in cfg or not os.path.exists(cfg["repository"]):
+            print("[ОШИБКА] Укажите существующий путь к тестовому файлу")
+            sys.exit(4)
+        dependencies = load_test_repo(cfg["repository"])
+    else:
+        # Режим реального репозитория
         try:
             deps = get_direct_dependencies(cfg["repository"], cfg["package_name"])
+            # Для графа создаём словарь с одним пакетом
+            dependencies = {cfg["package_name"]: deps}
         except Exception as e:
             print(f"[ОШИБКА ПОЛУЧЕНИЯ ЗАВИСИМОСТЕЙ] {e}")
             sys.exit(4)
 
-        if deps:
-            print("Прямые зависимости:")
-            for d in deps:
-                print(f" - {d}")
-        else:
-            print("У пакета нет прямых зависимостей.")
+    graph = DependencyGraph(dependencies)
+
+    try:
+        transitive = graph.get_transitive_dependencies(cfg["package_name"])
+    except Exception as e:
+        print(f"[ОШИБКА при DFS] {e}")
+        sys.exit(5)
+
+    if transitive:
+        print(f"Транзитивные зависимости пакета {cfg['package_name']}:")
+        for d in transitive:
+            print(f" - {d}")
     else:
-        print("\nТестовый режим на Этапе 2 не используется.")
+        print(f"У пакета {cfg['package_name']} нет транзитивных зависимостей.")
 
 
 if __name__ == "__main__":
